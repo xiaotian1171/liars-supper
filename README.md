@@ -8,6 +8,14 @@ Submission for quest [#15726 — Party deduction game with an AI host](https://g
 
 Live: https://xiaotian1171.github.io/liars-supper/
 
+![The briefing](docs/the-briefing.png)
+
+## Screens
+
+| The briefing | Holding to read your role | The reveal |
+| --- | --- | --- |
+| ![The briefing](docs/the-briefing.png) | ![Holding to read a role](docs/role-revealed.png) | ![The reveal](docs/the-reveal.png) |
+
 ## What it is
 
 One device, one table, four to twelve people. Nobody installs anything and
@@ -117,10 +125,13 @@ the host's own Pollen. Signed-out play costs nothing at all.
 
 ## Verified
 
-Walked end to end in a real browser (Chrome on a cloud desktop, 2026-10-03):
-opened the app, set a six-player table, opened the night, dealt and held to
-reveal a role, played all three twists through the timer, voted around the
-table, and read the reveal — no console errors.
+Walked end to end in a real browser (Chrome on a cloud desktop, 2026-10-03),
+from the deployed page: opened the app, set a six-player table, opened the night,
+dealt six roles and held the panel to reveal one of them (and watched it hide
+again on release), played all three twists through the timer, voted around the
+table, read the reveal and its tally, and started a second night with a fresh
+scenario. Every screen was asserted visible when it should be, and the console
+was empty of errors — the screenshots above are from that run.
 
 ## License
 
