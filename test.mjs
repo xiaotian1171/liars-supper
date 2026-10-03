@@ -161,6 +161,34 @@ eq("59 seconds reads 0:59", app.clockText(59), "0:59");
 eq("180 seconds reads 3:00", app.clockText(180), "3:00");
 eq("a clock that ran past zero reads 0:00", app.clockText(-4), "0:00");
 
+/* ------------------------------------------------- the page and the wiring */
+
+const html = readFileSync(join(here, "index.html"), "utf8");
+const htmlIds = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
+eq("no id is used twice in the page", htmlIds.length - new Set(htmlIds).size, 0);
+
+const wiring = source.match(/for \(const id of \[([\s\S]*?)\]\)/);
+ok("the wiring list is where this test expects it", Boolean(wiring));
+
+const camel = (id) => id.replace(/-(\w)/g, (_, letter) => letter.toUpperCase());
+const wired = new Set([...wiring[1].matchAll(/"([^"]+)"/g)].map((match) => camel(match[1])));
+for (const match of source.matchAll(/el\.(\w+) = \$\("([^"]+)"\)/g)) wired.add(match[1]);
+
+const reached = new Set([...source.matchAll(/\bel\.(\w+)/g)].map((match) => match[1]));
+eq("every element the app reaches for is wired up", [...reached].filter((name) => !wired.has(name)), []);
+eq("every id in the wiring list is really in the page", [...wired].filter((name) => !htmlIds.some((id) => camel(id) === name)), []);
+eq("the wiring list holds ids, not keys", [...wiring[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]).filter((id) => !htmlIds.includes(id)), []);
+
+for (const screen of ["setup", "briefing", "deal", "rounds", "vote", "reveal"]) {
+    ok(`the ${screen} screen is reachable`, source.includes(`state.screen = "${screen}"`));
+}
+
+const shown = source.match(/for \(const name of \[([\s\S]*?)\]\)/);
+ok("the screen list is where this test expects it", Boolean(shown));
+const screens = [...shown[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+eq("every screen the renderer switches is wired up", screens.filter((name) => !wired.has(name)), []);
+eq("every screen it switches is reachable", screens.filter((name) => !source.includes(`state.screen = "${name}"`)), []);
+
 /* ------------------------------------------------------------------- the end */
 
 if (failures.length) {

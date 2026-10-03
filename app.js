@@ -562,6 +562,7 @@ function paintDeal() {
     el.roleCard.classList.add("hidden");
     el.dealNext.classList.add("hidden");
     state.seen = false;
+    state.screen = "deal";
     render();
 }
 
@@ -950,7 +951,7 @@ function init() {
         "wallet", "mode", "signin", "signout",
         "setup", "count", "timer", "source", "voice-mode", "text-model", "voice-model", "voice",
         "names", "open", "shuffle-names", "setup-note", "signin-box", "oauth", "pastekey", "usekey", "appkey", "auth-note",
-        "briefing", "scenario-title", "premise", "read-brief", "deal-roles",
+        "briefing", "scenario-title", "premise", "read-brief", "deal", "deal-roles",
         "deal-kicker", "deal-name", "shield", "role-card", "role-team", "role-name", "role-objective", "role-secret",
         "deal-next", "deal-progress",
         "rounds", "round-kicker", "twist", "clock", "timer-toggle", "timer-reset", "read-twist", "next-round",
