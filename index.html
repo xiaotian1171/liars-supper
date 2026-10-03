@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Liar's Supper — a party deduction game with an AI host</title>
+<meta name="description" content="Pass one device around the table. An AI host deals secret roles, narrates three twists and reads the votes out loud. Built on Pollinations." />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="bar">
+    <div class="brand"><span class="dot"></span> Liar's Supper</div>
+    <div class="bar-right">
+        <span id="wallet" class="chip hidden"></span>
+        <span id="mode" class="chip">starter pack</span>
+        <button id="signin" class="btn ghost small">Sign in</button>
+        <button id="signout" class="btn ghost small hidden">Sign out</button>
+    </div>
+</header>
+
+<main>
+
+    <!-- ------------------------------------------------------------- the table -->
+    <section id="setup" class="panel">
+        <h1>The table is set</h1>
+        <p class="lede">
+            One device, passed around. The host hands out secret roles, narrates three twists and reads
+            the votes out loud. Everyone gets an objective; one or two of you are working against the table.
+        </p>
+
+        <div class="grid3">
+            <label class="field"><span>Players</span><select id="count"></select></label>
+            <label class="field"><span>Discussion timer</span><select id="timer"></select></label>
+            <label class="field">
+                <span>Who writes the scenario</span>
+                <select id="source">
+                    <option value="pack">The starter pack — no sign-in</option>
+                    <option value="ai">The host, fresh every game — sign in</option>
+                </select>
+            </label>
+            <label class="field">
+                <span>Host voice</span>
+                <select id="voice-mode">
+                    <option value="browser">This device's voice — free</option>
+                    <option value="pollinations">A Pollinations voice — sign in</option>
+                    <option value="silent">Silent, read it yourself</option>
+                </select>
+            </label>
+            <label class="field"><span>Writing model</span><select id="text-model"></select></label>
+            <label class="field"><span>Narration model</span><select id="voice-model"></select></label>
+            <label class="field"><span>Voice</span><select id="voice"></select></label>
+        </div>
+
+        <fieldset class="names">
+            <legend>Who is at the table?</legend>
+            <div id="names" class="names-grid"></div>
+        </fieldset>
+
+        <div class="row">
+            <button id="open" class="btn primary">Open the table</button>
+            <button id="shuffle-names" class="btn ghost">Shuffle the names</button>
+        </div>
+
+        <p id="setup-note" class="note">
+            Offline the host runs on a starter pack of three scenarios and this device's voice. Sign in and
+            it writes a new scenario every game and speaks with a Pollinations voice — on your own Pollen.
+        </p>
+
+        <details id="signin-box" class="box">
+            <summary>Sign in with your own Pollen</summary>
+            <p class="fine">
+                Bring your own Pollen keeps the app free to run: the host's writing and its voice are billed
+                to your own Pollinations balance, never to mine. The key stays in this tab and is gone when
+                you close it.
+            </p>
+            <div class="row tight">
+                <button id="oauth" class="btn small">Sign in with Pollinations</button>
+            </div>
+            <p class="fine">
+                No OAuth client registered for this page? Paste a key from <code>enter.pollinations.ai/keys</code>,
+                or put this page's hostname in as a client id below.
+            </p>
+            <div class="row tight">
+                <input id="pastekey" type="password" placeholder="sk_…" autocomplete="off" />
+                <button id="usekey" class="btn small">Use this key</button>
+            </div>
+            <label class="field">
+                <span>OAuth client id — optional</span>
+                <input id="appkey" type="text" placeholder="your registered client id" />
+            </label>
+            <p id="auth-note" class="fine">
+                Sign-in is the authorization-code flow with PKCE. Nothing is stored beyond this tab.
+            </p>
+        </details>
+    </section>
+
+    <!-- ---------------------------------------------------------- the briefing -->
+    <section id="briefing" class="panel hidden">
+        <p class="kicker">The host speaks</p>
+        <h2 id="scenario-title"></h2>
+        <p id="premise" class="premise"></p>
+        <div class="row">
+            <button id="read-brief" class="btn ghost">Read it aloud</button>
+            <button id="deal-roles" class="btn primary">Deal the secret roles</button>
+        </div>
+        <p class="fine">Everyone at the table has an objective. Some objectives pull against the others.</p>
+    </section>
+
+    <!-- -------------------------------------------------------------- the deal -->
+    <section id="deal" class="panel hidden">
+        <p class="kicker" id="deal-kicker">Pass the device</p>
+        <h2 id="deal-name"></h2>
+        <div id="shield" class="shield" role="button" tabindex="0" aria-label="Hold to reveal your role">
+            <span class="shield-hint">Hold to reveal your role</span>
+            <span class="shield-hint small">Nobody else should be looking</span>
+        </div>
+        <div id="role-card" class="role hidden">
+            <span id="role-team" class="badge"></span>
+            <h3 id="role-name"></h3>
+            <p class="role-line"><span>Objective</span><b id="role-objective"></b></p>
+            <p class="role-line"><span>Secret</span><b id="role-secret"></b></p>
+        </div>
+        <div class="row">
+            <button id="deal-next" class="btn primary hidden">Got it — pass the device on</button>
+        </div>
+        <p id="deal-progress" class="fine"></p>
+    </section>
+
+    <!-- ------------------------------------------------------------ the rounds -->
+    <section id="rounds" class="panel hidden">
+        <p class="kicker" id="round-kicker"></p>
+        <p id="twist" class="premise"></p>
+        <div class="clock-wrap">
+            <div id="clock" class="clock">1:30</div>
+            <div class="row tight">
+                <button id="timer-toggle" class="btn small">Start the timer</button>
+                <button id="timer-reset" class="btn ghost small">Reset</button>
+            </div>
+        </div>
+        <div class="row">
+            <button id="read-twist" class="btn ghost">Read it aloud</button>
+            <button id="next-round" class="btn primary">Next twist</button>
+        </div>
+    </section>
+
+    <!-- ------------------------------------------------------------- the vote -->
+    <section id="vote" class="panel hidden">
+        <p class="kicker" id="vote-kicker">Pass the device</p>
+        <h2 id="vote-name"></h2>
+        <p class="lede">Who do you think is working against the table? Nobody sees your answer until the host reads the votes.</p>
+        <div id="vote-buttons" class="votes"></div>
+    </section>
+
+    <!-- ----------------------------------------------------------- the reveal -->
+    <section id="reveal" class="panel hidden">
+        <p class="kicker">The host reads the votes</p>
+        <h2 id="verdict"></h2>
+        <div id="tally" class="tally"></div>
+        <p id="closing" class="premise"></p>
+        <ol id="roles-list" class="roles"></ol>
+        <p id="score" class="note"></p>
+        <div class="row">
+            <button id="again" class="btn primary">Another supper</button>
+            <button id="back" class="btn ghost">Change the table</button>
+        </div>
+    </section>
+
+</main>
+
+<footer class="fine">
+    Scenarios, narration and voices come from
+    <a href="https://pollinations.ai" target="_blank" rel="noreferrer">Pollinations</a>.
+    Bring your own Pollen. MIT licensed.
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="pack.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
