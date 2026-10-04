@@ -13,6 +13,7 @@ const APP_URL = location.origin + location.pathname.replace(/index\.html$/, "");
 const SS = { token: "ls.token", verifier: "ls.verifier", state: "ls.state" };
 const PREF = "ls.prefs";
 const APPKEY = "ls.appkey";
+const DEFAULT_APPKEY = "pk_xI3vZOVFgxG2xiwN";
 
 const MIN_PLAYERS = 4;
 const MAX_PLAYERS = 12;
@@ -303,7 +304,7 @@ async function startAuth() {
     const params = new URLSearchParams({
         response_type: "code",
         redirect_uri: APP_URL,
-        client_id: appkey || location.hostname,
+        client_id: appkey || DEFAULT_APPKEY,
         scope: "profile usage",
         state: nonce,
         code_challenge: await s256(verifier),
@@ -327,7 +328,7 @@ async function finishAuth(code, returnedState) {
         code,
         redirect_uri: APP_URL,
         code_verifier: verifier,
-        client_id: appkey || location.hostname,
+        client_id: appkey || DEFAULT_APPKEY,
     });
     const response = await fetch(`${ENTER}/api/oauth/token`, {
         method: "POST",
